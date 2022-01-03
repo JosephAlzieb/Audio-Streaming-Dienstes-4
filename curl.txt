@@ -1,0 +1,64 @@
+//alle Nutzer züruckgeben
+curl -X GET "http://localhost:8080/nutzer" -H  "accept: application/json;charset=UTF-8"
+
+//Nutzer hinzufügen
+curl -X POST "http://localhost:8080/nutzer" -H  "accept: */*" -H  "Content-Type: multipart/form-data" -F "email=joe7@web.de" -F "benutzername=joe7" -F "passwort=00AB"
+
+//alle PremiumNutzer züruckgeben
+curl -X GET "http://localhost:8080/premiumnutzer" -H  "accept: application/json;charset=UTF-8"
+
+//PremiumNutzer hinzufügen
+curl -X POST "http://localhost:8080/premiumnutzer" -H  "accept: */*" -H  "Content-Type: multipart/form-data" -F "email=joe8@web.de" -F "benutzername=joe8" -F "passwort=00AB" -F "ablaufdatum=2022-11-14"
+
+//alle Kuenstler züruckgeben
+curl -X GET "http://localhost:8080/kuenstler" -H  "accept: application/json;charset=UTF-8"
+
+//Kuenstler hinzufügen
+curl -X POST "http://localhost:8080/kuenstler" -H  "accept: */*" -H  "Content-Type: multipart/form-data" -F "email=joe9@web.de" -F "benutzername=joe9" -F "passwort=00AB" -F "ablaufdatum=2022-11-14" -F "kuenstlername=joe9"
+
+//alle Alben zurückgeben
+curl -X GET "http://localhost:8080/alben" -H  "accept: application/json;charset=UTF-8"
+
+//alle Genres zurückgeben
+curl -X GET "http://localhost:8080/genres" -H  "accept: application/json;charset=UTF-8"
+
+//alle Titel zurückgeben
+curl -X GET "http://localhost:8080/titel" -H  "accept: application/json;charset=UTF-8"
+//alle Titel zurückgeben, aber mit Parameter. 
+curl -X GET "http://localhost:8080/titel?dauer=40&bezeichnung=titel5" -H  "accept: application/json;charset=UTF-8"
+
+//alle Playlists zurückgeben
+curl -X GET "http://localhost:8080/playlists" -H  "accept: application/json;charset=UTF-8"
+
+//alle Kommentare zu "TitelId (Rowid)=4" zurückgeben
+curl -X GET "http://localhost:8080/titel/4/kommentare" -H  "accept: application/json;charset=UTF-8"
+
+//alle Bands zurückgeben
+curl -X GET "http://localhost:8080/bands" -H "accept: application/json;charset=UTF-8"
+
+//Album hinzufügen, und das einem Kuenstler zuordnen
+curl -X POST "http://localhost:8080/alben" -H  "accept: */*" -H "Content-Type: multipart/form-data" -F "bezeichnung=album5" -F "erscheinungsjahr=2000" -u "joe2@web.de:00AB"
+
+//Titel hinzufügen, und das einem Kuenstler zuordnen
+curl -X POST "http://localhost:8080/titel" -H  "accept: */*" -H  "Content-Type: multipart/form-data" -F "bezeichnung=titel6" -F "dauer=200" -F "speicherort_lq=lq6" -F "speicherort_hq=hq6" -u "joe2@web.de:00AB"
+
+//Band hinzufügen, und dann Geschichte hinzufügen wenn es gibt.
+curl -X POST "http://localhost:8080/bands" -H  "accept: */*" -H  "Content-Type: multipart/form-data" -F "name=band6" -F "geschichte=geschichte" -u "joe2@web.de:00AB"
+
+//Kuenstler zu einer Band hinzufügen. 
+curl -X POST "http://localhost:8080/bands/2/kuenstler" -H  "accept: */*" -H  "Content-Type: multipart/form-data" -F "kuenstlerid=5" -u "joe9@web.de:00AB"
+
+//eigene Band löschen.
+curl -X DELETE "http://localhost:8080/bands/1" -H  "accept: */*" -u "joe3@web.de:00AB"
+
+//Playlist hinzufügen
+curl -X POST "http://localhost:8080/playlists" -H  "accept: */*" -H "Content-Type: multipart/form-data" -F "bezeichnung=P6" -F "ist_privat=false" -F "coverbild=c.png" -u "joe2@web.de:00AB"
+
+//Titel zu der eigenen Playlist hinzufügen
+curl -X POST "http://localhost:8080/playlist/3/titel" -H "accept: */*" -H "Content-Type: multipart/form-data" -F "titelid=4" -u "joe3@web.de:00AB"
+
+//kommentar zu einem Titel abgeben
+curl -X POST "http://localhost:8080/titel/2/kommentare" -H  "accept: */*" -H  "Content-Type: multipart/form-data" -F "text=kommmentar!!" -u "joe5@web.de:00AB"
+
+//das eigene Kommentar updaten
+curl -X PATCH "http://localhost:8080/kommentare/2" -H  "accept: */*" -H "Content-Type: multipart/form-data" -F "text=neuesKommentar" -u "joe@web.de:00AB"
