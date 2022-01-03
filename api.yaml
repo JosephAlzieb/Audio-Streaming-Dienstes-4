@@ -1,0 +1,793 @@
+openapi: 3.0.2
+info:
+  title: DBS Programmierpraktikum - Phase 4 - API-Spezifikation
+  description: >-
+    In der folgenden Liste finden Sie die <b>für die Anwendergruppen
+    spezifischen Grundfunktionalitäten</b>. Es müssen <b>alle folgenden
+    allgemeinen Bedingungen</b> eingehalten werden: <ul>
+      <li><b>Bei einer gültigen <code>GET</code>-Anfrage wird ein JSON-Array von JSON-Objekten, wobei ein JSON-Objekt eine Entität darstellt, zurückgegeben</b> und dies mit einem Code <code>200</code> belegt. Wird die <code>GET</code>-Anfrage auf einer nicht vorhandenen Ressource ausgeführt, so wird mit Code <code>404</code> geantwortet. Ist die Ressource woanders zu finden, wird dies mit dem Code <code>301</code> und dem Link im Header belegt. Eine <code>GET</code>-Anfrage auf einer Ressource, die eine Sammlung von Entitäten darstellt, kann durch Übergabe von bestimmten Parametern und dazugehörigen Werten <b>case-insensitive gefiltert</b> werden. Dabei muss jede Entität in der Sammlung allen Parametern gleichzeitig genügen. Die Sammlung wird in der Antwort in ein JSON-Array gekapselt.</li>
+      <li><b>Bei <code>POST</code>-Anfragen werden alle Parameter bis auf diejenigen Parameter der entsprechenden Ressource benötigt, die Standardwerte besitzen.</b> Wird die <code>POST</code>-Anfrage auf einer nicht vorhandenen Ressource ausgeführt, so wird mit Code <code>404</code> geantwortet. Ist die Ressource woanders zu finden, wird dies mit dem Code <code>301</code> und dem Link im Header belegt. Ist die Ressource vorhanden, aber die Anfragen wegen irgendeiner anderen Sache (ungültige Werte, zu wenig Parameter, ...) ungültig, so wird dies mit einem Code <code>400</code> beantwortet, ansonsten mit Code <code>201</code> und dem Link zur neuen Ressource im Header belegt (<b>Wichtiger Hinweis:</b> Sollte ein spezifischer Endpunkt in unserer API nicht vorhanden sein, kann eine fiktive Location zurückgegeben werden. Beispiel: ".../endpunkt/{id}", wobei {id} die <b>RowID</b> der neu angelegten Ressource ist).</li>
+      <li><b>Bei <code>PATCH</code>-Anfragen werden nur diejenigen Parameter benötigt, die geändert werden sollen, folglich mindestens einer.</b> Wird die <code>PATCH</code>-Anfrage auf einer nicht vorhandenen Ressource ausgeführt, so wird mit Code <code>404</code> geantwortet. Ist die Ressource vorhanden, aber die Anfragen wegen irgendeiner anderen Sache (ungültige Werte, ...) ungültig, so wird dies mit einem Code <code>400</code> beantwortet, anonsten mit Code <code>204</code> belegt.</li>
+      <li><b>Bei einer gültigen <code>DELETE</code>-Anfrage wird der Code <code>204</code> zurückgegeben.</b> Ist die Ressource nicht vorhanden, wird dies mit Code <code>404</code> belegt.</li>
+      <li><b>Bereiche mit einem Schlosssymbol werden durch eine HTTP-Basisauthentifizierung abgesichert.</b> Wird einer dieser Bereiche ohne oder mit falschen Anmeldedaten aufgerufen, so wird dies mit einem <code>401</code> und dem Header <code>WWW-Authenticate</code> belegt. Sind die Anmeldedaten richtig, aber der Anwender ist nicht authorisiert, so wird dies mit einem Code <code>403</code> belegt.</li>
+      <li><b>In Antworten mit Code <code>4xx</code> wird ein JSON-Objekt, das mindestens den Schlüssel <code>"message"</code> mit dem Wert <code>&lt;Fehlermeldung&gt;</code> enthält, zurückgegeben</b>, wobei <code>&lt;Fehlermeldung&gt;</code> eine für den Umstand entsprechende Fehlermeldung ist. Bei einer auftretenden Exception reicht dafür die Nachricht dieser.</li>
+      <li><b>Antworten auf gültige <code>POST</code>- und <code>PATCH</code>-Anfragen beinhalten nichts.</b></li>
+      <li><b>Anfragen sind vom Typ <code>multipart/form-data</code>, Antworten sind vom Typ <code>application/json;charset=UTF-8</code>.</b></li>
+      <li><b>Datums- und Zeitangaben werden im entsprechenden Standard-SQL-Format übertragen</b> (sowohl in der Anfrage, als auch in der Antwort).</li>
+      <li><b>Passwörter werden der Einfachheit halber im Klartext übergeben.</b></li>
+      <li><b><u>Die erwähnten bzw. alle IDs sind RowIDs!!!</u></b></li>
+    </ul>
+  version: 2021.WiSe.1
+servers:
+  - url: 'http://localhost:8080'
+paths:
+  /nutzer:
+    get:
+      tags:
+        - Anwender
+      summary: Gibt Nutzer zurück.
+      description: 
+        Alle **Nutzer** werden zurückgegeben. Falls Query-Parameter mit Werten
+        angegeben wurden, wird die Rückgabe noch entsprechend gefiltert.
+      parameters:
+        - name: email
+          in: query
+          description: 'Nur Nutzer, deren **E-Mail-Adresse** `email` enthält, werden zurückgegeben.'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '**OK**.'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        nutzerid:
+                          type: integer
+                          description: '**RowID des Nutzers**.'
+                      required:
+                        - nutzerid
+                    - $ref: '#/components/schemas/nutzer'
+    post:
+      tags:
+        - Anwender
+      summary: Fügt einen Nutzer hinzu.
+      description:
+        Ein **Nutzer** wird mit den entsprechenden Werten hinzugefügt.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/nutzer'
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+  /premiumnutzer:
+    get:
+      tags:
+        - Anwender
+      summary: Gibt Premiumnutzer zurück.
+      description:
+        Alle **Premiumnutzer** werden zurückgegeben. Falls Query-Parameter mit Werten
+        angegeben wurden, wird die Rückgabe noch entsprechend gefiltert.
+      parameters:
+        - name: abgelaufen
+          in: query
+          description: 'Nur Premiumnutzer, deren Account abgelaufen (**abgelaufen** == `true`) bzw. noch nicht abgelaufen (**abgelaufen** == `false`) ist, werden zurückgegeben. Maßgebend ist hier der Kalendertag.'
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: '**OK**.'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        premiumnutzerid:
+                          type: integer
+                          description: '**RowID des Premiumnutzers**.'
+                        nutzerid:
+                          type: integer
+                          description: '**RowID des Nutzers**.'
+                      required:
+                        - premiumnutzerid
+                        - nutzerid
+                    - $ref: '#/components/schemas/premiumnutzer'
+                    - $ref: '#/components/schemas/nutzer'
+    post:
+      tags:
+        - Anwender
+      summary: Fügt einen Premiumnutzer hinzu.
+      description:
+        Ein **Premiumnutzer** wird mit den entsprechenden Werten hinzugefügt. Ein zugeordneter Nutzer wird ebenfalls angelegt.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/premiumnutzer'
+                - $ref: '#/components/schemas/nutzer'
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+  /kuenstler:
+    get:
+      tags:
+        - Anwender
+      summary: Gibt Künstler zurück.
+      description:
+        Alle **Künstler** werden zurückgegeben. Falls Query-Parameter mit Werten
+        angegeben wurden, wird die Rückgabe noch entsprechend gefiltert.
+      parameters:
+        - name: kuenstlername
+          in: query
+          description: 'Nur Künstler, deren **Künstlername** `kuenstlername` enthält, werden zurückgegeben.'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '**OK**.'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        premiumnutzerid:
+                          type: integer
+                          description: '**RowID des Premiumnutzers**.'
+                        nutzerid:
+                          type: integer
+                          description: '**RowID des Nutzers**.'
+                      required:
+                        - premiumnutzerid
+                        - nutzerid
+                    - $ref: '#/components/schemas/kuenstler'
+                    - $ref: '#/components/schemas/premiumnutzer'
+                    - $ref: '#/components/schemas/nutzer'
+    post:
+      tags:
+        - Anwender
+      summary: Fügt einen Künstler hinzu.
+      description:
+        Ein **Künstler** wird mit den entsprechenden Werten hinzugefügt. Ein zugeordneter Nutzer bzw. Premiumnutzer wird ebenfalls angelegt.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/kuenstler'
+                - $ref: '#/components/schemas/premiumnutzer'
+                - $ref: '#/components/schemas/nutzer'
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+  /alben:
+    get:
+      tags:
+        - Anwender
+      summary: Gibt Alben zurück.
+      description:
+        Alle **Alben** werden zurückgegeben. Falls Query-Parameter mit Werten
+        angegeben wurden, wird die Rückgabe noch entsprechend gefiltert.
+      parameters:
+        - name: trackanzahl
+          in: query
+          description: 'Nur Alben, die mindestens `trackanzahl` **Tracks** enthalten, werden zurückgegeben.'
+          schema:
+            type: integer
+        - name: bezeichnung
+          in: query
+          description: 'Nur Alben, deren **Bezeichnung** `bezeichnung` enthält, werden zurückgegeben.'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '**OK**.'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        albumid:
+                          type: integer
+                          description: '**RowID des Albums**.'
+                      required:
+                        - albumid
+                    - $ref: '#/components/schemas/album'
+    post:
+      tags:
+        - Authentifizierter und als Künstler authorisierter Anwender
+      summary: Ein Album wird hinzugefügt. 
+      description: 
+        Ein **Album** wird mit den entsprechenden Werten hinzugefügt. Das erstellte Album wird dem **authentifizierten Künstler** zugeordnet.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/album'
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'  
+  /genres:
+    get:
+      tags:
+        - Anwender
+      summary: Gibt Genres zurück.
+      description:
+        Alle **Genres** werden zurückgegeben. Falls Query-Parameter mit Werten
+        angegeben wurden, wird die Rückgabe noch entsprechend gefiltert.
+      parameters:
+        - name: bezeichnung
+          in: query
+          description: 'Nur Genres, deren **Bezeichnung** `bezeichnung` enthält, werden zurückgegeben.'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '**OK**.'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        genreid:
+                          type: integer
+                          description: '**RowID des Genres**.'
+                      required:
+                        - genreid
+                    - $ref: '#/components/schemas/genre'
+  /titel:
+    get:
+      tags:
+        - Anwender
+      summary: Gibt Titel zurück.
+      description: 
+        Alle **Titel** werden zurückgegeben. Falls Query-Parameter mit Werten angegeben wurden, wird die Rückgabe noch entsprechend gefiltert.
+      parameters:
+        - name: dauer
+          in: query
+          description: 'Nur Titel, deren **Dauer** mindestens `dauer` beträgt, werden zurückgegeben. Die Angabe wird in Sekunden gemacht.'
+          schema:
+            type: integer
+        - name: bezeichnung
+          in: query
+          description: 'Nur Titel, deren **Bezeichnung** `bezeichnung` enthält, werden zurückgegeben.'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '**OK**.'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        titelid:
+                          type: integer
+                          description: '**RowID der Titel**.'
+                      required:
+                        - titelid
+                    - $ref: '#/components/schemas/titel'
+    post:
+      tags:
+        - Authentifizierter und als Künstler authorisierter Anwender
+      summary: Ein Titel wird hinzugefügt.
+      description: 
+        Ein **Titel** wird hinzugefügt. Der erstellte Titel wird dem **authentifizierten Künstler** zugeordnet.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/titel'
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403' 
+  /playlists:
+    get:
+      tags:
+        - Anwender
+      summary: Gibt Playlists zurück.
+      description: 
+        Alle **Playlists** werden zurückgegeben. Falls Query-Parameter mit Werten angegeben wurden, wird die Rückgabe noch entsprechend gefiltert.
+      parameters:
+        - name: ist_privat
+          in: query
+          description: 'Nur Playlists, deren **ist_privat** `ist_privat` entsprechen, werden zurückgegeben.'
+          schema:
+            type: boolean
+        - name: bezeichnung
+          in: query
+          description: 'Nur Playlists, deren **Bezeichnung** `bezeichnung` enthält, werden zurückgegeben.'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '**OK**.'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        playlistid:
+                          type: integer
+                          description: '**RowID der Playlists**.'
+                      required:
+                        - playlistid
+                    - $ref: '#/components/schemas/playlist'
+    post:
+      tags:
+        - Authentifizierter und als Premiumnutzer authorisierter Anwender
+      summary: Eine Playlist wird hinzugefügt.
+      description: 
+        Eine **Playlist** wird hinzugefügt.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/playlist'
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /titel/{titelid}/kommentare:
+    get:
+      tags:
+        - Anwender
+      summary: Gibt die Kommentare eines Titels zurück.
+      description: 
+        Alle **Kommentare** von einem **Titel** werden zurückgegeben.
+      parameters:
+        - name: titelid
+          in: path
+          description: '**RowID** des Titels.'
+          schema:
+           type: integer
+          required: true
+      responses:
+        '200':
+          description: '**OK**.'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        kommentarid:
+                          type: integer
+                          description: '**RowID des Kommentars**.'
+                    - type: object
+                      properties:
+                        titelid:
+                          type: integer
+                          description: '**RowID des Titels**.'
+                      required:
+                        - titelid
+                        - kommentarid
+                    - $ref: '#/components/schemas/kommentar'
+        '404':
+          $ref: '#/components/responses/404'
+    post:
+      tags:
+        - Authentifizierter und als Nutzer authorisierter Anwender
+      summary: Fügt einen Kommentar zu einem Titel hinzu.
+      security:
+        - basicAuth: []
+      description: Ein **Kommentar** wird zu einem Titel hinzugefügt.
+      parameters:
+      - name: titelid
+        in: path
+        description: '**RowID** des Titels.'
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/kommentar'
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /kommentare/{kommentarid}:
+    patch:
+      tags:
+        - Authentifizierter und als Nutzer authorisierter Anwender
+      security:
+        - basicAuth: []
+      summary: Ändert einen (eigenen) Kommentar.
+      description: 
+        Der **Kommentar** wird gemäß der Request-Parameter geändert.
+      parameters:
+        - name: kommentarid
+          in: path
+          description: '**RowID** des Kommentars.'
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/kommentar'
+      
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /bands:
+    get:
+      tags:
+        - Anwender
+      summary: Gibt Bands zurück.
+      description: 
+        Alle **Bands** werden zurückgegeben. Falls Query-Parameter mit Werten
+        angegeben wurden, wird die Rückgabe noch entsprechend gefiltert.
+      parameters:
+        - name: name
+          in: query
+          description: 'Nur Bands, deren **Name** `name` enthält, werden zurückgegeben.'
+          schema:
+            type: string
+        - name: geschichte
+          in: query
+          description: 'Nur Bands, deren **Gechichte** `geschichte` enthält, werden zurückgegeben.'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '**OK**.'
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        bandid:
+                          type: integer
+                          description: '**RowID der Band**.'
+                      required:
+                        - bandid
+                    - $ref: '#/components/schemas/band'
+    post:
+      tags:
+        - Authentifizierter und als Künstler authorisierter Anwender
+      summary: Fügt eine Band hinzu.
+      security:
+        - basicAuth: []
+      description:
+        Eine **Band** wird mit den entsprechenden Werten hinzugefügt.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/band'
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+  /bands/{bandid}/kuenstler:
+    post:
+      tags:
+        - Authentifizierter und als Künstler authorisierter Anwender
+      summary: Fügt einen Künstler zu einer Band hinzu.
+      security:
+        - basicAuth: []
+      description: Ein **Künstler** wird zu einer Band hinzugefügt.
+      parameters:
+      - name: bandid
+        in: path
+        description: '**RowID** der Band.'
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                    - type: object
+                      properties:
+                        kuenstlerid:
+                          type: string
+                          description: '**RowID des Künstlers**.'
+                      required:
+                        - kuenstlerid
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /playlist/{playlistid}/titel:
+    post:
+      tags:
+        - Authentifizierter und als Premiumnutzer authorisierter Anwender
+      summary: Fügt einen Titel zu einer Playlist hinzu.
+      security:
+        - basicAuth: []
+      description: Ein **Titel** wird zu einer Playlist hinzugefügt.
+      parameters:
+      - name: playlistid
+        in: path
+        description: '**RowID** der Playlist.'
+        schema:
+          type: integer
+        required: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                    - type: object
+                      properties:
+                        titel:
+                          type: integer
+                          description: '**RowID des Titels**.'
+                      required:
+                        - titel
+      responses:
+        '201':
+          $ref: '#/components/responses/201'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  '/bands/{bandid}':
+    delete:
+      tags:
+        - Authentifizierter und als Künstler authorisierter Anwender
+      security:
+        - basicAuth: []
+      summary: Löscht eine Band.
+      description: Eine **Band** wird entfernt.
+      parameters:
+        - name: bandid
+          in: path
+          description: '**RowID** der Band.'
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+          
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+  responses:
+    '201':
+      description: '**Created**.'
+      headers:
+        Location:
+          description: Die URL der neuen Ressource. Siehe hierzu auch die Anmerkung bzgl. fiktiver Links im ersten Abschnitt.
+          schema:
+            type: string
+    '204':
+      description: '**No Content**.'
+    '301':
+      description: '**Moved Permanently**.'
+      headers:
+        Location:
+          description: Die URL der Ressource.
+          schema:
+            type: string
+    '400':
+      description: '**Bad Request**.'
+    '401':
+      description: '**Unauthorized**.'
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+    '403':
+      description: '**Forbidden**.'
+    '404':
+      description: '**Not Found**.'
+  schemas:
+    nutzer:
+      type: object
+      properties:
+        email:
+          type: string
+          description: '**E-Mail-Adresse** des Nutzers.'
+        passwort:
+          type: string
+          description: '**Passwort** des Nutzers.'
+        benutzername:
+          type: string
+          description: '**Benutzername** des Nutzers.'
+      required:
+        - email
+        - benutzername
+        - passwort
+    premiumnutzer:
+      type: object
+      properties:
+        ablaufdatum:
+          type: string
+          format: date
+          description: '**Ablaufdatum** des Premium-Nutzers im Format "YYYY-MM-DD".'
+      required:
+        - ablaufdatum
+    kuenstler:
+      type: object
+      properties:
+        kuenstlername:
+          type: string
+          description: '**Künstlername** des Künstlers.'
+      required:
+        - kuenstlername
+    genre:
+      type: object
+      properties:
+        bezeichnung:
+          type: string
+          description: '**Bezeichnung** des Genres.'
+      required:
+        - bezeichnung
+    playlist:
+      type: object
+      properties:
+        bezeichnung:
+          type: string
+          description: '**Bezeichnung** der Playlist.'
+        ist_privat:
+          type: boolean
+          description: '**Sichtbarkeit** der Playlist (true = privat / false = öffentlich).'
+        coverbild:
+          type: string
+          description: '**Coverbild-Pfad** der Playlist.'
+      required:
+        - bezeichnung
+        - ist_privat
+        - coverbild
+    band:
+      type: object
+      properties:
+        name:
+          type: string
+          description: '**Name** der Band.'
+        geschichte:
+          type: string
+          description: '**Geschichte** der Band.'
+      required:
+        - name
+    album:
+      type: object
+      properties:
+        bezeichnung:
+          type: string
+          description: '**Bezeichnung** des Albums.'
+        erscheinungsjahr:
+          type: string
+          description: '**Erscheinungsjahr** des Albums im Format "YYYY".'
+      required:
+        - bezeichnung
+        - erscheinungsjahr
+    titel:
+      type: object
+      properties:
+        bezeichnung:
+          type: string
+          description: '**Bezeichnung** des Titels.'
+        dauer:
+          type: integer
+          description: '**Dauer** des Titels (in Sekunden).'
+        speicherort_lq:
+          type: string
+          description: '**Speicherort** des Titels der niedrigen Qualität.'
+        speicherort_hq:
+          type: string
+          description: '**Speicherort** des Titels der hohen Qualität.'
+      required:
+        - bezeichnung
+        - dauer
+        - speicherort_lq
+        - speicherort_hq
+    kommentar:
+      type: object
+      properties:
+        text:
+          type: string
+          description: '**Text** des Kommentars.'
+      required:
+        - text
