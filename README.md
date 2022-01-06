@@ -1,5 +1,5 @@
 # Audio-Streaming-Dienstes-4
-## Das End-Ziel besteht daran, ein Systems zur Verwaltung eines Audio-Streaming-Dienstes zu implementieren.
+## Das End-Ziel besteht darin, ein Systems zur Verwaltung eines Audio-Streaming-Dienstes zu implementieren.
 
 ## Die Kommunikation mit der Datenbank soll auf Ebene von JDBC bleiben
 
